@@ -7,8 +7,8 @@ class _BTreeIterator:
 
     def __init__(self, root):
         self.current=root
-        self.left_it = _BTreeIterator(root.left) if root.left else None
-        self.right_it = _BTreeIterator(root.right) if root.right else None
+        self.left_it = self.__class__(root.left) if root.left else None
+        self.right_it = self.__class__(root.right) if root.right else None
 
     def __iter__(self):
         return self
@@ -27,7 +27,18 @@ class _BTreeIterator:
             return self.right_it.next()
         else:
             raise StopIteration
-            
+
+
+class _ReverseBTreeIterator():
+    def generator(self, root):
+        if root.right:
+            for x in root.right.iter(True):
+                yield x
+        yield root
+        if root.left:
+            for x in root.left.iter(True):
+                yield x
+        
         
 class BTree(object):
     """ A Btree is compound of a left BTree, a right BTree, a value and a parent"""
@@ -89,28 +100,38 @@ class BTree(object):
         """ infixe iteration """
         return _BTreeIterator(self)
 
+    def iter(self, reverse=False):
+        if reverse:
+            return _ReverseBTreeIterator().generator(self)
+        else:
+            return self.__iter__()
+
     def to_list(self):
         return [x.value for x in self] 
 
     def __str__(self):
-        return str(self.value)
+        return self.pretty_print()
 
-    def __repr__(self):
-        string = "N:"+self.__str__()
+    def pretty_print(self):
+        string = "N:"+self.__repr__()
         if self.left:
-            string += "\n"+"-"*(self.depth()+2)+"L:"+self.left.__repr__()
+            string += "\n"+"-"*2*(self.depth()+1)+"L:"+self.left.pretty_print()
         if self.right:
-            string += "\n"+"-"*(self.depth()+2)+"R:"+self.right.__repr__()
+            string += "\n"+"-"*2*(self.depth()+1)+"R:"+self.right.pretty_print()
         return string
        
-        
+    def __repr__(self):
+        return str(self.value)
         
     
 
     
 
-tree = BTree(2)
-tree.set_left(BTree(1))
-tree.set_right(BTree(3))
+tree = BTree(20)
+tree.set_left(BTree(10))
+tree.left.set_left(BTree(5))
+tree.left.set_right(BTree(15))
+tree.set_right(BTree(30))
+tree.right.set_right(BTree(35))
 
 
