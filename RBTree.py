@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from BTree import BTree
 
 class SBTree(BTree):
@@ -65,21 +66,27 @@ class RB_BSTree(BTree):
     def insert(self, element):
         #https://en.wikipedia.org/wiki/Red%E2%80%93black_tree#Insertion
         inserted = self._simple_insert(element)
-        return self._balance_inserted(inserted)
+        balance = self._balance_inserted(inserted)
+        # print "{} inséré".format(balance.get_root())
+        return balance.get_root()
 
     def _rotate_left(self):
         """
-             P                 P    
+             P                 P
            /   \             /   \
           S                 R
-         / \               / \ 
+         / \               / \
         1   R       ==>   S   5
            / \           / \
-          RL  5         1  RL  
+          RL  5         1  RL
         """
-        
+        #print "rotate_left : "+ str(self.value)
+        #print self.get_root()
+        if not self.right:
+            raise ValueError(
+                "Self must have a non null right child to rotate left")
         s,r,rl,p=self, self.right, self.right.left, self.parent
-        
+
         if p and s.is_left():
             p.set_left(r)
         elif p and s.is_right():
@@ -87,18 +94,25 @@ class RB_BSTree(BTree):
         else:
             r.parent=None
         s.set_right(rl)
-        r.set_left(s) 
+        r.set_left(s)
+        #print "rotated"
+        #print self.get_root()
+
 
     def _rotate_right(self):
         """
-             P                 P    
+             P                 P
            /   \             /   \
           S                 L
-         / \               / \ 
+         / \               / \
         L   5       ==>   1   S
-       / \                   / \   
+       / \                   / \
       1   LR                RL  5
         """
+        if not self.left:
+            raise ValueError(
+                "Self must have a non null left child to rotate right")
+
         s,l,lr,p=self, self.left, self.left.right, self.parent
         if p and s.is_left():
             p.set_left(l)
@@ -108,11 +122,10 @@ class RB_BSTree(BTree):
             l.parent=None
         s.set_left(lr)
         l.set_right(s)
-        
+
 
     def _balance_inserted(self, inserted):
-        print "Insertion {}", inserted
-        print self
+
         if inserted.is_root() :
             inserted.color=RB_BSTree.BLACK
             return self
@@ -125,20 +138,53 @@ class RB_BSTree(BTree):
             return self._balance_inserted(inserted._grand_parent())
         elif self.is_right() and self.parent.is_left():
             inserted.parent._rotate_left()
+            inserted = inserted.left
         elif self.is_left() and self.parent.is_right():
             inserted.parent._rotate_right()
+            inserted = inserted.right
         inserted.parent.color=RB_BSTree.BLACK
         inserted._grand_parent().color=RB_BSTree.RED
         if inserted.is_left():
             inserted._grand_parent()._rotate_right()
         else:
             inserted._grand_parent()._rotate_left()
-        print self
+        # print self.get_root()
         return self
 
     def __repr__(self):
-        return ('R' if self.color==RB_BSTree.RED else 'B') + '_' + str(self.value)
+        return ('R' if self.color==RB_BSTree.RED else 'B') \
+            + '_' + str(self.value)
 
+    def checkRB(self):
+        if not self.is_root():
+            return self.get_root().checkRB()
+        # Root is BLACK
+        if not self.isBlack():
+            print "root not black"
+            return False
+        # every RED node's father is BLACK
+        for x in self:
+            if x.isRed() and not x.parent.isBlack():
+                print "two reds in line"
+                return False
+        # every path from leaf to root contains the same count of black nodes
+        count_black=0
+        for x in self:
+            if not x.left or not x.right:
+                count=1+len([n for n in x._iter_to_root() if n.isBlack()])
+                if not count_black:
+                    count_black=count
+                else:
+                    if count != count_black:
+                        print "black count fail : {} - {} // {}".format(count, count_black, [n for n in x._iter_to_root()])
+                        return False
+        return True
+
+    def _iter_to_root(self):
+        yield self
+        if self.parent:
+            for x in self.parent._iter_to_root():
+                yield x
 
 if __name__=='__main__':
     help(SBTree)
@@ -147,11 +193,30 @@ if __name__=='__main__':
     print rTree
     print list(rTree)
 
+    #test rotation
+    tree1=RB_BSTree('S')
+    # tree1.set_left(RB_BSTree('1'))
+    tree1.set_right(RB_BSTree('R'))
+    # tree1.right.set_left(RB_BSTree('2'))
+    # tree1.right.set_right(RB_BSTree('3'))
+    print tree1.get_root()
+    tree1._rotate_left()
+    print tree1.get_root()
+    tree1.get_root()._rotate_right()
+    print tree1.get_root()
+
+    print "-"*20
+
     import random
 
     rbTree=RB_BSTree(10)
     for i in xrange(20):
-        rbTree.insert(random.randint(0,100))
-    print rbTree
-    print list(rbTree)
-
+        ins = random.randint(0,100)
+        rbTree.get_root().insert(ins)
+        if not rbTree.checkRB():
+            print "dernière insertion : " + str(ins)
+            print rbTree.get_root()
+            break
+    print rbTree.get_root()
+    print len(rbTree.get_root())
+    print list(rbTree.get_root())
