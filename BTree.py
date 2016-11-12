@@ -18,23 +18,36 @@ class BTree(object):
     def set_right(self, btree):
         """ set the right son
         btree must be a kind of tree
+        returns the inserted Node
         """
         self.right=btree
         btree.parent=self
+        return btree
 
     def set_left(self, btree):
         """ set the left son
         btree must be a kind of tree
+        returns the inserted Node
         """
         self.left=btree
         btree.parent=self
+        return btree
 
     def set_value(self, value):
         self.value=value
 
+    def is_root(self):
+        return self.parent==None
+
     def is_leaf(self):
         """ True if self is a leaf"""
         return self.right==None and left.right==None
+
+    def is_left(self):
+        return self.parent and self is self.parent.left
+
+    def is_right(self):
+        return self.parent and self is self.parent.right
 
     def depth(self):
         if self.parent==None:
@@ -121,15 +134,15 @@ class BTree(object):
         return str(self.value)
         
     
+if __name__=='__main__':
+    help(BTree)
 
-help(BTree)
-
-tree = BTree(20)
-tree.set_left(BTree(10))
-tree.left.set_left(BTree(5))
-tree.left.set_right(BTree(15))
-tree.set_right(BTree(30))
-tree.right.set_right(BTree(35))
-print tree.pretty_print()
+    tree = BTree(20)
+    tree.set_left(BTree(10))
+    tree.left.set_left(BTree(5))
+    tree.left.set_right(BTree(15))
+    tree.set_right(BTree(30))
+    tree.right.set_right(BTree(35))
+    print tree.pretty_print()
 
 
